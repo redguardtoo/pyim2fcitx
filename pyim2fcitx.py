@@ -1,21 +1,29 @@
 #!/usr/bin/env python
-
 import sys
 import re
+import getopt
 
 
 def usage():
     print("Usage:")
-    print("  python pyim2fcitx.py my-dict.pyim\n")
+    print("  python pyim2fcitx.py [-f 5] my-dict.pyim\n")
+    print("  -f: fcitx version whose default value is 4 \n")
     print("  Visit https://github.com/tumashu/pyim to get pyim dictionaries")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    all_args = sys.argv[1:]
+    opts, arg = getopt.getopt(all_args, 'f:')
+    fcitx_version = 4
+
+    if len(arg) < 1:
         usage()
         exit(1)
 
-    rd = open(sys.argv[1], "r")
+    for opt, arg_val in opts:
+        if opt == "-f" and int(arg_val) > fcitx_version:
+            fcitx_version = int(arg_val)
+    rd = open(arg[0], "r")
     while True:
         line = rd.readline()
 
@@ -32,6 +40,14 @@ if __name__ == "__main__":
                 pinyin = m.group(1).replace("-", "'")
                 words = m.group(2).split()
                 for word in words:
-                    print("%s %s" % (pinyin, word))
+                    if fcitx_version == 5:
+                        print("%s %s 0" % (word, pinyin))
+                    else:
+                        print("%s %s" % (pinyin, word))
             else:
-                print(line.replace("-", "'"))
+                if fcitx_version == 5:
+                    pinyin_and_word = line.replace("-", "'").split()
+                    # first is pinyin, second is word
+                    print("%s %s 0" % (pinyin_and_word[1], pinyin_and_word[0]))
+                else:
+                    print(line.replace("-", "'"))
